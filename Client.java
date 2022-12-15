@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+
 public class Client {
     private String nomUtil;
 
@@ -21,13 +22,10 @@ public class Client {
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         Scanner sc = new Scanner(System.in);
-        ThreadEnvoyer envoi = new ThreadEnvoyer(sc.nextLine(),clientSocket);
+        ThreadEnvoyer envoi = new ThreadEnvoyer(sc.nextLine(),in,out,sc);
         envoi.start();
-        ThreadRecevoir recevoir= new ThreadRecevoir(in.readLine(),clientSocket);
-        recevoir.start();
-        System.out.println("Client déconecté");
-        out.close();
-        clientSocket.close();      
+        // ThreadRecevoir recevoir= new ThreadRecevoir(in.readLine(),in,out,clientSocket,serveurSocket);
+        // recevoir.start();
     }
 
     public static void main(String []args) throws IOException{

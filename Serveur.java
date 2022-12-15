@@ -1,5 +1,4 @@
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -23,14 +22,10 @@ public class Serveur {
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         Scanner sc = new Scanner(System.in);
-        ThreadEnvoyer envoi = new ThreadEnvoyer(sc.nextLine(),clientSocket);
-        envoi.start();
-        ThreadRecevoir recevoir= new ThreadRecevoir(in.readLine(),clientSocket);
+        // ThreadEnvoyer envoi = new ThreadEnvoyer(sc.nextLine(),in,out);
+        // envoi.start();
+        ThreadRecevoir recevoir= new ThreadRecevoir(in.readLine(),in,out,clientSocket,serveurSocket);
         recevoir.start();
-        System.out.println("Client déconnecté");
-        out.close();
-        clientSocket.close();
-        serveurSocket.close();
     }
 
 

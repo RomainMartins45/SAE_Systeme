@@ -3,36 +3,50 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ThreadRecevoir extends Thread{
     private String msg ;
-    private Socket socket;
+    BufferedReader in;
+    PrintWriter out;
+    ServerSocket serveurSocket;
+    Socket clientSocket;
+
     
-    public ThreadRecevoir(String msg,Socket socket){
+    public ThreadRecevoir(String msg,BufferedReader in,PrintWriter out,Socket clientSocket,ServerSocket serveurSocket ){
         this.msg = msg;
-        this.socket = socket;
+        this.in = in;
+        this.out = out;
+        this.clientSocket = clientSocket;
+        this.serveurSocket = serveurSocket;
     }
     
     @Override
     public void run(){
-        while(msg!=null){
-            try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            PrintWriter out;
-            try {
-                out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            out.println("Client : "+msg);
+        try {
             msg = in.readLine();
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
         }
-        System.out.println("Client déconnecté");
+        while(msg!=null){
+            System.out.println("Client : "+msg);
+            try {
+                msg = in.readLine();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            }
+            System.out.println("Client déconnecté");
+            out.close();
+            try {
+                clientSocket.close();
+                serveurSocket.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
     }
-}
