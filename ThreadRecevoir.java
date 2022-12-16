@@ -14,12 +14,11 @@ public class ThreadRecevoir extends Thread{
     Socket clientSocket;
 
     
-    public ThreadRecevoir(String msg,BufferedReader in,PrintWriter out,Socket clientSocket,ServerSocket serveurSocket ){
+    public ThreadRecevoir(String msg,BufferedReader in,PrintWriter out,Socket clientSocket){
         this.msg = msg;
         this.in = in;
         this.out = out;
         this.clientSocket = clientSocket;
-        this.serveurSocket = serveurSocket;
     }
     
     @Override
@@ -27,15 +26,13 @@ public class ThreadRecevoir extends Thread{
         try {
             msg = in.readLine();
         } catch (IOException e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
         while(msg!=null){
-            System.out.println("Client : "+msg);
+            System.out.println(msg);
             try {
                 msg = in.readLine();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             }
@@ -43,9 +40,7 @@ public class ThreadRecevoir extends Thread{
             out.close();
             try {
                 clientSocket.close();
-                serveurSocket.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }

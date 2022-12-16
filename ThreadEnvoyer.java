@@ -11,18 +11,20 @@ public class ThreadEnvoyer extends Thread{
     BufferedReader in;
     PrintWriter out;
     Scanner sc;
+    String nom;
 
-    public ThreadEnvoyer(String msg,BufferedReader in,PrintWriter out,Scanner sc){
+    public ThreadEnvoyer(String msg,BufferedReader in,PrintWriter out,Scanner sc,String nom){
         this.msg = msg;
         this.in = in;
         this.out = out;
         this.sc = sc;
+        this.nom = nom;
     }
 
     public void run() {
             while(true){
                 msg = sc.nextLine();
-                out.println(msg);
+                out.println(this.nom + " : " + msg);
                 out.flush();
             }
         }
