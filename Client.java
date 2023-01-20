@@ -5,14 +5,11 @@ import java.util.Scanner;
 public class Client {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        System.out.println("Choisissez un pseudo :");
-        String nom = sc.nextLine();
         try {
             Socket socket = new Socket("localhost", 5555);
-            System.out.println("Connected to server on port 5555");
 
             new Thread(() -> {
-                receiveMessages(socket,nom);
+                ClientThread(socket);
             }).start();
 
             PrintWriter pw = new PrintWriter(socket.getOutputStream(), true);
@@ -27,12 +24,12 @@ public class Client {
             }
     }
 
-    private static void receiveMessages(Socket socket,String nom) {
+    private static void ClientThread(Socket socket) {
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String message;
             while ((message = br.readLine()) != null) {
-                System.out.println(nom + " : " + message);
+                System.out.println(message);
             }
         } catch (IOException e) {
             e.printStackTrace();
