@@ -1,41 +1,51 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class Serveur {
-    private String adresse;
-    private String nomServeur;
-    private List<Socket> listeClients;
-    
-    public Serveur(String adresse, String nomServeur){
-        this.adresse = adresse;
-        this.nomServeur = nomServeur;
-        this.listeClients = new ArrayList<>();
-    }
+    private static List<Socket> clients = new ArrayList<>();
+    public static void main(String[] args) {
+        try {
+            ServerSocket server = new ServerSocket(5555);
+            System.out.println("Server started on port 5555");
 
-    public void mainServeur(int port) throws IOException{
-        ServerSocket serveurSocket = new ServerSocket(port);
-        while(true){
-            Socket clientSocket = serveurSocket.accept();
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-            System.out.println("Client connecté");
-            this.listeClients.add(clientSocket);
-            Scanner sc = new Scanner(System.in);
-            ThreadRecevoir recevoir= new ThreadRecevoir(in.readLine(),in,out,clientSocket);
-            recevoir.start();
+            while (true) {
+                Socket client = server.accept();
+                clients.add(client);
+                System.out.println("Client connected: " + client.getInetAddress());
+                new Thread(() -> {
+                    receiveMessages(client);
+                }).start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
+    private static void receiveMessages(Socket client) {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            String message;
+            while ((message = br.readLine()) != null) {
+                System.out.println("Received message from " + client.getInetAddress() + ": " + message);
+                sendMessageToAll(client, message);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-public static void main(String []args) throws IOException{
-    Serveur serveur = new Serveur("0.0.0.0", "test");
-    serveur.mainServeur(6000);
-}}
+    private static void sendMessageToAll(Socket sender, String message) {
+        for (Socket client : clients) {
+            if (client != sender) {
+                try {
+                    PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                    pw.println(message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}

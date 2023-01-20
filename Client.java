@@ -1,38 +1,42 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.io.*;
+import java.net.*;
 import java.util.Scanner;
 
-
 public class Client {
-    private String nomUtil;
-
-    public Client(String nom){
-        this.nomUtil = nom;
-    }
-
-    public void mainClient(String adresse, int port) throws UnknownHostException, IOException{
-        Socket clientSocket = new Socket(adresse, port);
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+    public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        ThreadEnvoyer envoi = new ThreadEnvoyer(sc.nextLine(),in,out,sc,this.nomUtil);
-        envoi.start();
-        ThreadRecevoir recevoir= new ThreadRecevoir(in.readLine(),in,out,clientSocket);
-        recevoir.start();
+        System.out.println("Choisissez un pseudo :");
+        String nom = sc.nextLine();
+        try {
+            Socket socket = new Socket("localhost", 5555);
+            System.out.println("Connected to server on port 5555");
+
+            new Thread(() -> {
+                receiveMessages(socket,nom);
+            }).start();
+
+            PrintWriter pw = new PrintWriter(socket.getOutputStream(), true);
+            Scanner scanner = new Scanner(System.in);
+            String message;
+            while (true) {
+                message = scanner.nextLine();
+                pw.println(message);
+            }
+            } catch (IOException e) {
+            e.printStackTrace();
+            }
     }
 
-    public static void main(String []args) throws IOException{
-        Scanner scan = new Scanner(System.in);
-        System.out.println("Entrez votre pseudo");
-        String nom = scan.nextLine();
-        Client client = new Client(nom);
-        client.mainClient("0.0.0.0", 6000);
+    private static void receiveMessages(Socket socket,String nom) {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String message;
+            while ((message = br.readLine()) != null) {
+                System.out.println(nom + " : " + message);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
 }

@@ -5,6 +5,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ThreadRecevoir extends Thread{
     private String msg ;
@@ -12,13 +14,15 @@ public class ThreadRecevoir extends Thread{
     PrintWriter out;
     ServerSocket serveurSocket;
     Socket clientSocket;
+    private List<Socket> listeClients;
 
     
-    public ThreadRecevoir(String msg,BufferedReader in,PrintWriter out,Socket clientSocket){
+    public ThreadRecevoir(String msg,BufferedReader in,PrintWriter out,Socket clientSocket,List<Socket> l){
         this.msg = msg;
         this.in = in;
         this.out = out;
         this.clientSocket = clientSocket;
+        this.listeClients = l;
     }
     
     @Override
@@ -29,7 +33,9 @@ public class ThreadRecevoir extends Thread{
             e1.printStackTrace();
         }
         while(msg!=null){
-            System.out.println(msg);
+            for(Socket socket : this.listeClients){
+                Serveur.sendMessage(clientSocket, socket, msg);
+            }
             try {
                 msg = in.readLine();
             } catch (IOException e) {
