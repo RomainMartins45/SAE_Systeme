@@ -34,7 +34,7 @@ public class ThreadRecevoir extends Thread{
         }
         while(msg!=null){
             for(Socket socket : this.listeClients){
-                Serveur.sendMessage(clientSocket, socket, msg);
+                Serveur.sendMessageToAll(socket, msg);
             }
             try {
                 msg = in.readLine();
