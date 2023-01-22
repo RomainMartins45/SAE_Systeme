@@ -9,16 +9,31 @@ public class Serveur {
     public static void main(String[] args) {
         try {
             ServerSocket server = new ServerSocket(5555);
-            Room général = new Room("général");
+            Room général = new Room("general");
             rooms.add(général);
             while (true) {
                 Socket client = server.accept();
                 PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
-                pw.println("Choisissez votre pseudo");
-                BufferedReader br = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                String nom = br.readLine();
+                boolean pseudoPrit = true;
+                String nom = "bug";
+                while(pseudoPrit){
+                    pw.println("Choisissez votre pseudo");
+                    BufferedReader br = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                    nom = br.readLine();
+                    if(!(clients.containsValue(nom))){ 
+                        pseudoPrit = false;
+                    }
+                    else{
+                        pw.println("Pseudo déjà prit.");
+                    }
+                }
                 clients.put(client,nom);
                 général.addClient(client);
+                pw.println("Vous êtes dans le groupe général, pour rejoindre un groupe utilisez /JOIN + nomdugroupe.");
+                pw.println("Voici la liste des groupes (/SALONS)");
+                for(Room room : rooms){
+                    pw.println(room.getNom());
+                }
                 ThreadServeur thread = new ThreadServeur(client, nom,clients,rooms);
                 thread.start();
             }
@@ -27,11 +42,13 @@ public class Serveur {
         }
     }
 
-    public static void envoieMessage(Socket sender, String message) {
+
+    // Envoie un message à tout les utilisateurs présent dans le groupe de l'envoyeur
+    public static void envoieMessage(Socket envoyeur, String message) {
         for (Room rooms : rooms) {
-            if (rooms.clientDansRoom(sender)){
+            if (rooms.clientDansRoom(envoyeur)){
                 for(Socket client : rooms.clients){
-                    if (client != sender) {
+                    if (client != envoyeur) {
                         try {
                             PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
                             pw.println(message);

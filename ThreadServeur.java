@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class ThreadServeur extends Thread{
@@ -25,12 +25,80 @@ public class ThreadServeur extends Thread{
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(client.getInputStream()));
             String message;
-            while ((message = br.readLine()) != null) {
-                System.out.println("Received message from " + client.getInetAddress() + ": " + message);
-                System.out.println(message);
+            boolean continu = true;
+            while ((message = br.readLine()) != null && continu) {
                 if(message.charAt(0) == '/'){
-                    // Créer un salon
-                    if(message.substring(1, 5).equals("ADD ")){
+                    try{
+
+                    // Affiche le nom de tout les salons
+                    if(message.equals("/SALONS")){
+                        PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                        for(Room room : rooms){
+                            pw.println(room.getNom());
+                        }
+                    }
+
+                    // Affiche le nombre de gens dans le salon actuelle
+                    else if(message.equals("/nbusers")){
+                        PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                        for(Room room : rooms){
+                            if(room.clients.contains(client)){
+                                pw.println("Le salon " + room.getNom() + " comporte " + room.getNbusers() + " user(s).");
+                            }
+                        }
+                    }
+
+                    // Affiche le nombre de gens dans le salon actuelle
+                    else if(message.equals("/users")){
+                        PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                        for(Room room : rooms){
+                            if(room.clients.contains(client)){
+                                pw.println("Voici la liste des utilisateurs du salon " + room.getNom() + " :");
+                                for (Socket users : room.clients){
+                                    pw.println(clients.get(users));
+                                }
+                            }
+                        }
+                    }
+
+                    // Date depuis création du salon actuelle
+                    else if(message.equals("/uptime")){
+                        PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                        for(Room room : rooms){
+                            if(room.clients.contains(client)){
+                                pw.println("Le salon " + room.getNom() + " est ouvert depuis " + room.dateDepuisCreation() + " minute(s).");
+                            }
+                        }
+                    }
+
+                    // Quitter
+                    else if(message.equals("/quit")){
+                        continu = false;
+                        PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                        pw.println("Déconnexion");
+                    }
+
+                    // Rejoindre un salon
+                    else if(message.substring(1, 6).equals("JOIN ")){
+                        String nomRoom = message.substring(6);
+                        if(Serveur.nomRoomExiste(nomRoom)){
+                            for(Room room : rooms){
+                                if(room.getNom().equals(nomRoom)){
+                                    Serveur.quitterSalon(client);
+                                    room.addClient(client);
+                                    PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                                    pw.println("Vous avez rejoint le salon " + room.getNom());
+                                }
+                            }
+                        }
+                        else{
+                            PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                            pw.println("Ce salon n'existe pas, vous pouvez le créer avec /ADD");
+                        }
+                    }
+                    
+                    // Ajouter un salon
+                    else if(message.substring(1, 5).equals("ADD ")){
                         String nomRoom = message.substring(5);
                         if(!(Serveur.nomRoomExiste(nomRoom))){
                             List<Socket> l = new ArrayList<>();
@@ -46,28 +114,25 @@ public class ThreadServeur extends Thread{
                         }
                     }
 
-                    // Rejoindre un salon
-                    else if(message.substring(1, 6).equals("JOIN ")){
-                        String nomRoom = message.substring(6);
+                    // Supprimer un salon
+                    else if(message.substring(1, 5).equals("SUP ")){
+                        String nomRoom = message.substring(5);
+                        PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
                         if(Serveur.nomRoomExiste(nomRoom)){
                             for(Room room : rooms){
                                 if(room.getNom().equals(nomRoom)){
-                                    Serveur.quitterSalon(client);
-                                    room.addClient(client);
+                                    if(room.getNbusers() == 0){
+                                        rooms.remove(room);
+                                        pw.println("Le salon " + nomRoom + " a été supprimé");
+                                    }
+                                    else{
+                                        pw.println("D'autres utilisateurs utilisent ce salon, vous ne pouvez pas le supprimer.");
+                                    }
                                 }
                             }
                         }
                         else{
-                            PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
-                            pw.println("Ce salon n'existe pas, vous pouvez le créer avec /ADD");
-                        }
-                    }
-
-                    // Affiche le nom de tout les salons
-                    else if(message.equals("/SALONS")){
-                        PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
-                        for(Room room : rooms){
-                            pw.println(room.getNom());
+                            pw.println("Ce salon n'existe pas");
                         }
                     }
 
@@ -80,13 +145,25 @@ public class ThreadServeur extends Thread{
                             if(mapentry.getValue().equals(pseudo)){
                                 Socket s = mapentry.getKey();
                                 PrintWriter pw = new PrintWriter(s.getOutputStream(), true);
-                                pw.println(nom + " : " + msg);
+                                SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                                Date dateActuelle = new Date();
+                                pw.println("(MP) "+ format.format(dateActuelle) + " " + nom + " : " + msg);
                             }
                         }
                     }
+
+                }
+                    catch(StringIndexOutOfBoundsException e){
+                        PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                        pw.println("Commande inconnue");
+                    }
             }
                 else{
-                    Serveur.envoieMessage(client, nom + " : " + message);
+                    // Message normal
+                    
+                    SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    Date dateActuelle = new Date();
+                    Serveur.envoieMessage(client, format.format(dateActuelle) + " " + nom + " : " + message);
                 }
             }
         } catch (IOException e) {

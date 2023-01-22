@@ -6,11 +6,13 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Room {
     private String nom;
     List<Socket> clients;
+    Date dateCrea = new Date();
 
     public Room(String nom,List<Socket> clients){
         this.nom = nom;
@@ -20,6 +22,10 @@ public class Room {
     public Room(String nom){
         this.nom = nom;
         this.clients = new ArrayList<>();
+    }
+
+    public int getNbusers(){
+        return this.clients.size();
     }
 
     public String getNom(){
@@ -32,6 +38,11 @@ public class Room {
 
     public boolean clientDansRoom(Socket client){
         return this.clients.contains(client);
+    }
+
+    public long dateDepuisCreation(){
+        long dateActuelle  = new Date().getTime();
+        return ((dateActuelle - dateCrea.getTime())/1000)/60;
     }
 
     public void sendMessageToRoom(Socket sender, String message) {
