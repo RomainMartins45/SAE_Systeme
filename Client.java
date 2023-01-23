@@ -12,7 +12,7 @@ public class Client {
             Socket socket = new Socket("localhost", 5555);
 
             new Thread(() -> {
-                ClientThread(socket);
+                recupMessage(socket);
             }).start();
 
             PrintWriter pw = new PrintWriter(socket.getOutputStream(), true);
@@ -24,6 +24,7 @@ public class Client {
                 pw.println(message);
                 if(message.equals("/quit")){
                     continu = false;
+                    break;
                 }
             }
             } catch (IOException e) {
@@ -31,7 +32,7 @@ public class Client {
             }
     }
 
-    private static void ClientThread(Socket socket) {
+    private static void recupMessage(Socket socket){
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String message;

@@ -76,6 +76,13 @@ public class ThreadServeur extends Thread{
                         continu = false;
                         PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
                         pw.println("Déconnexion");
+                        for(Room room : rooms){
+                            if(room.clients.contains(client)){
+                                pw.println(room.clients.remove(client));
+                            }
+                        }
+                        clients.remove(client);
+                        break;
                     }
 
                     // Rejoindre un salon
@@ -138,9 +145,13 @@ public class ThreadServeur extends Thread{
 
                     // Envoyer un message privé à un utilisateur
                     else if(message.substring(1, 4).equals("MP ")){
-                        int pseudoIndex = message.lastIndexOf(" ");
-                        String pseudo = message.substring(4, pseudoIndex);
+                        int pseudoIndex = 0;
+                        for(int i = 4;message.charAt(i) != ' '; i++){
+                            pseudoIndex = i;
+                        }
+                        String pseudo = message.substring(4, pseudoIndex+1);
                         String msg = message.substring(pseudoIndex + 1);
+                        boolean envoieMsg = false;
                         for(Map.Entry<Socket,String> mapentry : clients.entrySet()){
                             if(mapentry.getValue().equals(pseudo)){
                                 Socket s = mapentry.getKey();
@@ -148,7 +159,12 @@ public class ThreadServeur extends Thread{
                                 SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
                                 Date dateActuelle = new Date();
                                 pw.println("(MP) "+ format.format(dateActuelle) + " " + nom + " : " + msg);
+                                envoieMsg = true;
                             }
+                        }
+                        if(!(envoieMsg)){
+                            PrintWriter pw = new PrintWriter(client.getOutputStream(), true);
+                            pw.println("L'utilisateur " + pseudo + " n'existe pas");
                         }
                     }
 
